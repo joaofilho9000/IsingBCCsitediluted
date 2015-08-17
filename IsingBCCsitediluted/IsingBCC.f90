@@ -4,10 +4,10 @@ program IsingBCC
 
     !decalraÃ§Ã£o de variaveis
     intrinsic random_seed, random_number
-    byte, parameter ::L=3
+
     integer ::MCx, MCc
     integer ::passo
-    integer ::magnetizacao
+    integer ::magnetizacao, eneJ1, eneJ2
     double precision energia
     double precision  somaMag, somaMag2, somaMag4
     double precision  somaEne, somaEne2, somaEne4
@@ -15,27 +15,33 @@ program IsingBCC
     double precision  mediaMag,  mediaMag2, mediaMag4
     double precision  mediaEne,mediaEne2, mediaEne4
     double precision  susceptibilidade, cumuM
-    double precision  calor, cumuE
+    double precision  calor
 
 
-    integer ::sigma(1:2,1:L,1:L,1:L)
-    byte ::ant(1:L), suc(1:L)
-    byte ::bond_i(1:2,1:L,1:L,1:L)
-    byte ::bond_j(1:2,1:L,1:L,1:L)
-    byte ::bond_k(1:2,1:L,1:L,1:L)
-    real::t0, p   !p=0 sistema puro
-    real::J2
-    real::tin,tfi,dt
-    double precision ::w(-8:8,-6:6)
-    real    ::rando
+    integer, dimension(:,:,:,:), allocatable ::sigma
+    byte, dimension(:), allocatable ::ant, suc
+    byte, dimension(:,:,:,:), allocatable ::bond_i,bond_j,bond_k
     byte :: histograma
+    byte ::L
+    real::t0, p   !p=0 sistema puro
+    real::tin,tfi,dt
+    real::J2
+    real::rando
+    double precision ::w(-8:8,-6:6)
+
+
     !Abrindo arquivos
     open(22,file='hist.dat')
     open(12,file='dados.dat')
 
     !inicilizaÃ§Ã£o das variaveis
-
     call leDados
+    allocate(ant(1:L))
+    allocate(suc(1:L))
+    allocate(bond_i(1:2,1:L,1:L,1:L))
+    allocate(bond_j(1:2,1:L,1:L,1:L))
+    allocate(bond_k(1:2,1:L,1:L,1:L))
+    allocate(sigma(1:2,1:L,1:L,1:L))
 
     write(*,*) 'iniciando simulação com :'
     write(*,*) 'p =', p
@@ -60,7 +66,8 @@ program IsingBCC
             write(*,*) 'ok'
             do passo = 1 , MCc
                 call metropolis
-                call salvar
+                 call calcularMagEng
+                write(22,*) , eneJ1, eneJ2,  magnetizacao
             end do
         else
             do passo = 1 , MCc
@@ -74,6 +81,12 @@ program IsingBCC
     !fechando arquivos
     close(10)
     close(20)
+    deallocate(ant)
+    deallocate(suc)
+    deallocate(bond_i)
+    deallocate(bond_j)
+    deallocate(bond_k)
+    deallocate(sigma)
     write(*,*) 'fim do programa'
    !fim do programa
 
@@ -125,6 +138,7 @@ CONTAINS
     end subroutine calcularMedia
      !-----------------------------------------------------------------------------
     subroutine leDados
+        read(12,*) L
         read(12,*) p
         read(12,*) tin
         read(12,*) tfi
@@ -284,16 +298,7 @@ CONTAINS
         end do
     end subroutine atualiza
 
-    !-----------------------------------------------------------------------------
-    subroutine salvar
-        integer :: i,j,k, NJ1,NJ2
-        integer :: soma_nj1
-        integer :: soma_nj2 , magnetizacao
-        integer :: somaSigma
 
-
-       ! write(22,*) soma_nj1, soma_nj2,  magnetizacao
-    end subroutine salvar
     !-----------------------------------------------------------------
     subroutine CalcularMagEng
         integer :: i,j,k,NJ1,NJ2
@@ -332,6 +337,8 @@ CONTAINS
             end do
         end do
         energia = -(soma_nj1+ J2*soma_nj2)
+        eneJ1=soma_nj1
+        eneJ2=soma_nj2
         magnetizacao = sum(sigma(:,:,:,:))
     end subroutine CalcularMagEng
     !-----------------------------------------------------------------
