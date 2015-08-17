@@ -2,9 +2,9 @@ program IsingBCC
     implicit none
     save
 
-    !decalração de variaveis
+    !decalraÃ§Ã£o de variaveis
     intrinsic random_seed, random_number
-    byte, parameter ::L=30
+    byte, parameter ::L=3
     integer ::MCx, MCc
     integer ::passo
     integer ::magnetizacao
@@ -33,7 +33,7 @@ program IsingBCC
     open(22,file='hist.dat')
     open(12,file='dados.dat')
 
-    !inicilização das variaveis
+    !inicilizaÃ§Ã£o das variaveis
 
     call leDados
 
@@ -52,7 +52,7 @@ program IsingBCC
     do t0 = tin , tfi, dt
         call iniciaVariaveis
         call atualiza(t0,W)
-        !repetições termalização
+        !repetiÃ§Ãµes termalizaÃ§Ã£o
         do passo = 1 , MCx
             call metropolis
         end do
@@ -120,7 +120,7 @@ CONTAINS
         mediaEne4=somaEne4/MCc
         calor= (MediaEne2-mediaEne*mediaEne)/NumeroSitios/t0/t0
         susceptibilidade= (mediaMag2 - MediaMag*MediaMag)*NumeroSitios/t0
-        cumuM=1-mediaMag4/(3*mediaMag2*mediaMag2)  ! rever essa equação soma ou media
+        cumuM=1-mediaMag4/(3*mediaMag2*mediaMag2)  ! rever essa equaÃ§Ã£o soma ou media
         write(*, *)t0, susceptibilidade, calor, cumuM, mediaMag, mediaEne
     end subroutine calcularMedia
      !-----------------------------------------------------------------------------
@@ -180,12 +180,12 @@ CONTAINS
 
     !-----------------------------------------------------------------------------
     subroutine geraLigacao
-        byte::  i,j,k,subrede
-        subrede=1
+        byte::  i,j,k
+
         do i=1,L
             do j=1,L
                 do k=1,L
-                    if( isolada(subrede ,i,j,k) )then
+                    if( isolada(1,i,j,k) )then
                         bond_i(2,i,j,k)=1
                         bond_i(2,i,suc(j),k)=1
                         bond_i(2,i,j,suc(k))=1
@@ -204,20 +204,21 @@ CONTAINS
                 end do
             end do
         end do
-subrede=2
+
         do i=1,L
             do j=1,L
                 do k=1,L
-                    if( isolada(subrede,i,j,k) )then
+                    if( isolada(2,i,j,k) )then
+
                         Bond_i(1,ant(i),ant(j),ant(k))=1
-                        Bond_i(1,ant(i),j, ant(k))=1
                         Bond_i(1,ant(i),ant(j), k)=1
                         Bond_i(1,ant(i), j, k)=1
+                        Bond_i(1,ant(i),j, ant(k))=1
 
                         Bond_j(1,ant(i), ant(j),ant(k))=1
                         Bond_j(1,ant(i), ant(j), k)=1
-                        Bond_j(1, i,  ant(j),ant(k))=1
                         Bond_j(1, i,  ant(j), k)=1
+                        Bond_j(1, i,  ant(j),ant(k))=1
 
                         Bond_k(1,ant(i),ant(j),ant(k))=1
                         Bond_k(1,i,ant(j),ant(k))=1
@@ -234,7 +235,8 @@ subrede=2
     function isolada(subrede,i,j,k)
         !Variaveis mudas
         logical :: isolada
-        byte::  i,j,k, subrede
+        byte::  i,j,k
+        integer ::subrede
 
         if(subrede==1)then
             isolada= (ABS(&
@@ -249,8 +251,7 @@ subrede=2
                 sigma(2,i,suc(j),suc(k))&
                 )==1) .AND. &
                 (sigma(1,i,j,k)==0)
-        end if
-        if(subrede==2)then
+        else
             isolada= (ABS(&
                 sigma(1,ant(i),ant(j),k)* &
                 sigma(1,i,ant(j),k)* &
@@ -261,7 +262,7 @@ subrede=2
                 sigma(1,i,j,ant(k))* &
                 sigma(1,ant(i),j,ant(k)) &
                 )==1) .AND. (sigma(2,i,j,k)==0)
-        end if
+       end if
     end function  isolada
 
     !-----------------------------------------------------------------------------
@@ -285,86 +286,17 @@ subrede=2
 
     !-----------------------------------------------------------------------------
     subroutine salvar
-        integer :: i,j,k,sinal, NJ1,NJ2
+        integer :: i,j,k, NJ1,NJ2
         integer :: soma_nj1
         integer :: soma_nj2 , magnetizacao
         integer :: somaSigma
 
-        soma_nj1=0
-        soma_nj2=0
-        somaSigma=0
 
-        sinal=1
-        do i=1,L
-            do j=1,L
-                do k=1,L
-                    NJ1= sigma(sinal,i,j,k)*(&
-                        sigma(-sinal,i,j,k)+ &
-                        sigma(-sinal,suc(i),j,k)+ &
-                        sigma(-sinal,suc(i),suc(j),k)+ &
-                        sigma(-sinal,i,suc(j),k)+ &
-                        sigma(-sinal,i,j,suc(k))+ &
-                        sigma(-sinal,suc(i),j,suc(k))+ &
-                        sigma(-sinal,suc(i),suc(j),suc(k))+ &
-                        sigma(-sinal,i,suc(j),suc(k))   )
-
-                    NJ2= sigma(sinal,i,j,k)*(&
-                        sigma(sinal,ant(i),j,k)*Bond_i(sinal,ant(i),j,k)+ &
-                        sigma(sinal,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
-                        sigma(sinal,i,ant(j),k)*Bond_j(sinal,i,ant(j),k)+ &
-                        sigma(sinal,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
-                        sigma(sinal,i,j,ant(k))*Bond_k(sinal,i,j,ant(k))+ &
-                        sigma(sinal,i,j,suc(k))*Bond_k(sinal,i,j,k) )
-                    soma_nj1=NJ1+ soma_nj1
-                    soma_nj2=NJ2+ soma_nj2
-                end do
-            end do
-        end do
-
-        sinal=-1
-        do i=1,L
-            do j=1,L
-                do k=1,L
-                    NJ1= sigma(sinal,i,j,k)*( &
-                        sigma(-sinal,ant(i),ant(j),k)+ &
-                        sigma(-sinal,i,ant(j),k)+ &
-                        sigma(-sinal,i,j,k)+ &
-                        sigma(-sinal,ant(i),j,k)+ &
-                        sigma(-sinal,ant(i),ant(j),ant(k))+ &
-                        sigma(-sinal,i,ant(j),ant(k))+ &
-                        sigma(-sinal,i,j,ant(k))+ &
-                        sigma(-sinal,ant(i),j,ant(k)) )
-
-                    NJ2= sigma(sinal,i,j,k)*(  &
-                        sigma(sinal,ant(i),j,k)*Bond_i(sinal,ant(i),j,k)+ &
-                        sigma(sinal,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
-                        sigma(sinal,i,ant(j),k)*Bond_j(sinal,i,ant(j),k)+ &
-                        sigma(sinal,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
-                        sigma(sinal,i,j,ant(k))*Bond_k(sinal,i,j,ant(k))+ &
-                        sigma(sinal,i,j,suc(k))*Bond_k(sinal,i,j,k))
-
-                    soma_nj1=NJ1+ soma_nj1
-                    soma_nj2=NJ2+ soma_nj2
-
-                end do
-            end do
-        end do
-
-        !        do sinal=-1,1,2
-        !            do i=1,L
-        !                do j=1,L
-        !                    do k=1,L
-        !                        somaSigma= somaSigma + sigma(sinal,i,j,k)
-        !                    end do
-        !                end do
-        !            end do
-        !        end do
-        magnetizacao = sum(sigma(:,:,:,:))
-        write(22,*) soma_nj1, soma_nj2,  magnetizacao
+       ! write(22,*) soma_nj1, soma_nj2,  magnetizacao
     end subroutine salvar
     !-----------------------------------------------------------------
     subroutine CalcularMagEng
-        integer :: i,j,k,sinal, NJ1,NJ2
+        integer :: i,j,k,NJ1,NJ2
         integer :: soma_nj1
         integer :: soma_nj2
         integer :: somaSigma
@@ -372,11 +304,10 @@ subrede=2
         soma_nj1=0
         soma_nj2=0
         somaSigma=0
-
         do i=1,L
             do j=1,L
                 do k=1,L
-                    NJ1= sigma(1,i,j,k)*(&
+                   NJ1= sigma(1,i,j,k)*(&
                         sigma(2,i,j,k)+ &
                         sigma(2,suc(i),j,k)+ &
                         sigma(2,suc(i),suc(j),k)+ &
@@ -387,37 +318,25 @@ subrede=2
                         sigma(2,i,suc(j),suc(k))   )
 
                     NJ2= sigma(1,i,j,k)*(&
-                         sigma(1,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
-                         sigma(1,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
-                         sigma(1,i,j,suc(k))*Bond_k(sinal,i,j,k) ) +&
+                         sigma(1,suc(i),j,k)*Bond_i(1,i,j,k)+ &
+                         sigma(1,i,suc(j),k)*Bond_j(1,i,j,k)+ &
+                         sigma(1,i,j,suc(k))*Bond_k(1,i,j,k) ) +&
                          sigma(2,i,j,k)*( &
-                         sigma(2,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
-                         sigma(2,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
-                         sigma(2,i,j,suc(k))*Bond_k(sinal,i,j,k))
+                         sigma(2,suc(i),j,k)*Bond_i(2,i,j,k)+ &
+                         sigma(2,i,suc(j),k)*Bond_j(2,i,j,k)+ &
+                         sigma(2,i,j,suc(k))*Bond_k(2,i,j,k))
 
                     soma_nj1=NJ1+ soma_nj1
                     soma_nj2=NJ2+ soma_nj2
                 end do
             end do
         end do
-!
-!                do sinal=-1,1,2
-!                    do i=1,L
-!                        do j=1,L
-!                            do k=1,L
-!                                somaSigma= somaSigma + sigma(sinal,i,j,k)
-!                            end do
-!                        end do
-!                    end do
-!                end do
-!
-
         energia = -(soma_nj1+ J2*soma_nj2)
         magnetizacao = sum(sigma(:,:,:,:))
     end subroutine CalcularMagEng
     !-----------------------------------------------------------------
     subroutine metropolis
-        integer i, j, k, sinal, NJ1, NJ2
+        integer i, j, k, NJ1, NJ2
        ! varre subrede=1
         do i=1,L
             do j=1,L
@@ -433,12 +352,12 @@ subrede=2
                          sigma(2,i,suc(j),suc(k))   )
 
                     NJ2= sigma(1,i,j,k)*(&
-                        sigma(1,ant(i),j,k)*Bond_i(1,ant(i),j,k)+ &
-                        sigma(1,suc(i),j,k)*Bond_i(1,i,j,k)+ &
-                        sigma(1,i,ant(j),k)*Bond_j(1,i,ant(j),k)+ &
-                        sigma(1,i,suc(j),k)*Bond_j(1,i,j,k)+ &
-                        sigma(1,i,j,ant(k))*Bond_k(1,i,j,ant(k))+ &
-                        sigma(1,i,j,suc(k))*Bond_k(1,i,j,k) )
+                         sigma(1,ant(i),j,k)*Bond_i(1,ant(i),j,k)+ &
+                         sigma(1,suc(i),j,k)*Bond_i(1,i,j,k)+ &
+                         sigma(1,i,ant(j),k)*Bond_j(1,i,ant(j),k)+ &
+                         sigma(1,i,suc(j),k)*Bond_j(1,i,j,k)+ &
+                         sigma(1,i,j,ant(k))*Bond_k(1,i,j,ant(k))+ &
+                         sigma(1,i,j,suc(k))*Bond_k(1,i,j,k) )
                     call random_number(rando)
                     if (rando<W(NJ1,NJ2)) then
                         sigma(1,i,j,k)=-sigma(1,i,j,k)
@@ -462,12 +381,12 @@ subrede=2
                          sigma(1,ant(i),j,ant(k)) )
 
                     NJ2= sigma(2,i,j,k)*(  &
-                        sigma(2,ant(i),j,k)*Bond_i(2,ant(i),j,k)+ &
-                        sigma(2,suc(i),j,k)*Bond_i(2,i,j,k)+ &
-                        sigma(2,i,ant(j),k)*Bond_j(2,i,ant(j),k)+ &
-                        sigma(2,i,suc(j),k)*Bond_j(2,i,j,k)+ &
-                        sigma(2,i,j,ant(k))*Bond_k(2,i,j,ant(k))+ &
-                        sigma(2,i,j,suc(k))*Bond_k(2,i,j,k))
+                         sigma(2,ant(i),j,k)*Bond_i(2,ant(i),j,k)+ &
+                         sigma(2,suc(i),j,k)*Bond_i(2,i,j,k)+ &
+                         sigma(2,i,ant(j),k)*Bond_j(2,i,ant(j),k)+ &
+                         sigma(2,i,suc(j),k)*Bond_j(2,i,j,k)+ &
+                         sigma(2,i,j,ant(k))*Bond_k(2,i,j,ant(k))+ &
+                         sigma(2,i,j,suc(k))*Bond_k(2,i,j,k))
                     call random_number(rando)
                     if(rando<W(NJ1,NJ2)) sigma(2,i,j,k)=-sigma(2,i,j,k)
                 end do
