@@ -18,11 +18,11 @@ program IsingBCC
     double precision  calor, cumuE
 
 
-    integer ::sigma(-1:1,1:L,1:L,1:L)
+    integer ::sigma(1:2,1:L,1:L,1:L)
     byte ::ant(1:L), suc(1:L)
-    byte ::bond_i(-1:1,1:L,1:L,1:L)
-    byte ::bond_j(-1:1,1:L,1:L,1:L)
-    byte ::bond_k(-1:1,1:L,1:L,1:L)
+    byte ::bond_i(1:2,1:L,1:L,1:L)
+    byte ::bond_j(1:2,1:L,1:L,1:L)
+    byte ::bond_k(1:2,1:L,1:L,1:L)
     real::t0, p   !p=0 sistema puro
     real::J2
     real::tin,tfi,dt
@@ -148,43 +148,18 @@ CONTAINS
 
     !-----------------------------------------------------------------------------
     subroutine iniciaSigma
-        byte::  i,j,k
-        integer ::sinal
-        !        do sinal =-1,1,2
-        !            do i = 1 , L
-        !                do j = 1 , L
-        !                    do k = 1 , L
-        !                        sigma(sinal,i,j,k)=1
-        !                    end do
-        !                end do
-        !            end do
-        !        end do
         sigma=1
     end subroutine iniciaSigma
     !-----------------------------------------------------------------------------
     subroutine iniciaBond
-        byte::  i,j,k
-        integer ::sinal
-        !        do sinal =-1,1,2
-        !            do i = 1 , L
-        !                do j = 1 , L
-        !                    do k = 1 , L
-        !                        bond_i(sinal,i,j,k)=0
-        !                        bond_j(sinal,i,j,k)=0
-        !                        bond_k(sinal,i,j,k)=0
-        !                    end do
-        !                end do
-        !            end do
-        !        end do
         bond_i=0
         bond_j=0
         bond_k=0
     end subroutine iniciaBond
     !-----------------------------------------------------------------------------
     subroutine  dilui
-        integer :: sinal,n
-        byte::  i,j,k
-
+        integer :: n
+        byte    ::  i,j,k,subrede
         real    ::aux
         n=0
         do while(n<int(2*p*L*L*L))
@@ -195,10 +170,9 @@ CONTAINS
             call random_number(rando)
             k=int(L*rando)+1
             call random_number(rando)
-            aux=rando+0.5
-            sinal=int(aux/abs(aux))
-            if (abs(sigma(sinal, i,j,k))==1) then
-                sigma(sinal, i,j,k)=0
+            subrede=int(2*rando)+1
+            if (abs(sigma(subrede, i,j,k))==1) then
+                sigma(subrede, i,j,k)=0
                 n=n+1
             end if
         end do
@@ -206,52 +180,49 @@ CONTAINS
 
     !-----------------------------------------------------------------------------
     subroutine geraLigacao
-        byte::  i,j,k
-        integer ::sinal
-        integer :: n
-        n=0
-        sinal=1
+        byte::  i,j,k,subrede
+        subrede=1
         do i=1,L
             do j=1,L
                 do k=1,L
-                    if( isolada(sinal,i,j,k) )then
-                        bond_i(-sinal,i,j,k)=1
-                        bond_i(-sinal,i,suc(j),k)=1
-                        bond_i(-sinal,i,j,suc(k))=1
-                        bond_i(-sinal,i,suc(j),suc(k))=1
+                    if( isolada(subrede ,i,j,k) )then
+                        bond_i(2,i,j,k)=1
+                        bond_i(2,i,suc(j),k)=1
+                        bond_i(2,i,j,suc(k))=1
+                        bond_i(2,i,suc(j),suc(k))=1
 
-                        bond_j(-sinal,i,j,k)=1
-                        bond_j(-sinal,suc(i),j,k)=1
-                        bond_j(-sinal,i,j,suc(k))=1
-                        bond_j(-sinal,suc(i),j,suc(k))=1
+                        bond_j(2,i,j,k)=1
+                        bond_j(2,suc(i),j,k)=1
+                        bond_j(2,i,j,suc(k))=1
+                        bond_j(2,suc(i),j,suc(k))=1
 
-                        bond_k(-sinal,i,j,k)= 1
-                        bond_k(-sinal,suc(i),j,k)= 1
-                        bond_k(-sinal,i,suc(j),k)= 1
-                        bond_k(-sinal,suc(i),suc(j),k)= 1
+                        bond_k(2,i,j,k)= 1
+                        bond_k(2,suc(i),j,k)= 1
+                        bond_k(2,i,suc(j),k)= 1
+                        bond_k(2,suc(i),suc(j),k)= 1
                     end if
                 end do
             end do
         end do
-        sinal=-1
+subrede=2
         do i=1,L
             do j=1,L
                 do k=1,L
-                    if( isolada(sinal,i,j,k) )then
-                        Bond_i(-sinal,ant(i),ant(j),ant(k))=1
-                        Bond_i(-sinal,ant(i),    j, ant(k))=1
-                        Bond_i(-sinal,ant(i),ant(j),    k)=1
-                        Bond_i(-sinal,ant(i),    j,     k)=1
+                    if( isolada(subrede,i,j,k) )then
+                        Bond_i(1,ant(i),ant(j),ant(k))=1
+                        Bond_i(1,ant(i),j, ant(k))=1
+                        Bond_i(1,ant(i),ant(j), k)=1
+                        Bond_i(1,ant(i), j, k)=1
 
-                        Bond_j(-sinal,ant(i), ant(j),ant(k))=1
-                        Bond_j(-sinal,ant(i), ant(j),    k)=1
-                        Bond_j(-sinal,    i,  ant(j),ant(k))=1
-                        Bond_j(-sinal,    i,  ant(j),    k)=1
+                        Bond_j(1,ant(i), ant(j),ant(k))=1
+                        Bond_j(1,ant(i), ant(j), k)=1
+                        Bond_j(1, i,  ant(j),ant(k))=1
+                        Bond_j(1, i,  ant(j), k)=1
 
-                        Bond_k(-sinal,ant(i),ant(j),ant(k))=1
-                        Bond_k(-sinal,i,ant(j),ant(k))=1
-                        Bond_k(-sinal,i,j,ant(k))=1
-                        Bond_k(-sinal,ant(i),j,ant(k))=1
+                        Bond_k(1,ant(i),ant(j),ant(k))=1
+                        Bond_k(1,i,ant(j),ant(k))=1
+                        Bond_k(1,i,j,ant(k))=1
+                        Bond_k(1,ant(i),j,ant(k))=1
                     end if
                 end do
             end do
@@ -260,37 +231,36 @@ CONTAINS
 
     !-----------------------------------------------------------------------------
 
-    function isolada(sinal,i,j,k)
+    function isolada(subrede,i,j,k)
         !Variaveis mudas
         logical :: isolada
-        byte::  i,j,k
-        integer ::sinal
+        byte::  i,j,k, subrede
 
-        if(sinal==1)then
+        if(subrede==1)then
             isolada= (ABS(&
-                sigma(-sinal,i,j,k)* &
-                sigma(-sinal,suc(i),j,k)* &
-                sigma(-sinal,suc(i),suc(j),k)* &
-                sigma(-sinal,i,suc(j),k)* &
+                sigma(2,i,j,k)* &
+                sigma(2,suc(i),j,k)* &
+                sigma(2,suc(i),suc(j),k)* &
+                sigma(2,i,suc(j),k)* &
 
-                sigma(-sinal,i,j,suc(k))* &
-                sigma(-sinal,suc(i),j,suc(k))* &
-                sigma(-sinal,suc(i),suc(j),suc(k))* &
-                sigma(-sinal,i,suc(j),suc(k))&
+                sigma(2,i,j,suc(k))* &
+                sigma(2,suc(i),j,suc(k))* &
+                sigma(2,suc(i),suc(j),suc(k))* &
+                sigma(2,i,suc(j),suc(k))&
                 )==1) .AND. &
-                (sigma(sinal,i,j,k)==0)
+                (sigma(1,i,j,k)==0)
         end if
-        if(sinal==-1)then
+        if(subrede==2)then
             isolada= (ABS(&
-                sigma(-sinal,ant(i),ant(j),k)* &
-                sigma(-sinal,i,ant(j),k)* &
-                sigma(-sinal,i,j,k)* &
-                sigma(-sinal,ant(i),j,k)* &
-                sigma(-sinal,ant(i),ant(j),ant(k))*&
-                sigma(-sinal,i,ant(j),ant(k))* &
-                sigma(-sinal,i,j,ant(k))* &
-                sigma(-sinal,ant(i),j,ant(k)) &
-                )==1) .AND. (sigma(sinal,i,j,k)==0)
+                sigma(1,ant(i),ant(j),k)* &
+                sigma(1,i,ant(j),k)* &
+                sigma(1,i,j,k)* &
+                sigma(1,ant(i),j,k)* &
+                sigma(1,ant(i),ant(j),ant(k))*&
+                sigma(1,i,ant(j),ant(k))* &
+                sigma(1,i,j,ant(k))* &
+                sigma(1,ant(i),j,ant(k)) &
+                )==1) .AND. (sigma(2,i,j,k)==0)
         end if
     end function  isolada
 
@@ -403,116 +373,103 @@ CONTAINS
         soma_nj2=0
         somaSigma=0
 
-        sinal=1
         do i=1,L
             do j=1,L
                 do k=1,L
-                    NJ1= sigma(sinal,i,j,k)*(&
-                        sigma(-sinal,i,j,k)+ &
-                        sigma(-sinal,suc(i),j,k)+ &
-                        sigma(-sinal,suc(i),suc(j),k)+ &
-                        sigma(-sinal,i,suc(j),k)+ &
-                        sigma(-sinal,i,j,suc(k))+ &
-                        sigma(-sinal,suc(i),j,suc(k))+ &
-                        sigma(-sinal,suc(i),suc(j),suc(k))+ &
-                        sigma(-sinal,i,suc(j),suc(k))   )
+                    NJ1= sigma(1,i,j,k)*(&
+                        sigma(2,i,j,k)+ &
+                        sigma(2,suc(i),j,k)+ &
+                        sigma(2,suc(i),suc(j),k)+ &
+                        sigma(2,i,suc(j),k)+ &
+                        sigma(2,i,j,suc(k))+ &
+                        sigma(2,suc(i),j,suc(k))+ &
+                        sigma(2,suc(i),suc(j),suc(k))+ &
+                        sigma(2,i,suc(j),suc(k))   )
 
-                    NJ2= sigma(sinal,i,j,k)*(&
-                         sigma(sinal,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
-                         sigma(sinal,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
-                         sigma(sinal,i,j,suc(k))*Bond_k(sinal,i,j,k) )
+                    NJ2= sigma(1,i,j,k)*(&
+                         sigma(1,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
+                         sigma(1,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
+                         sigma(1,i,j,suc(k))*Bond_k(sinal,i,j,k) ) +&
+                         sigma(2,i,j,k)*( &
+                         sigma(2,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
+                         sigma(2,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
+                         sigma(2,i,j,suc(k))*Bond_k(sinal,i,j,k))
+
                     soma_nj1=NJ1+ soma_nj1
                     soma_nj2=NJ2+ soma_nj2
                 end do
             end do
         end do
-
-        sinal=-1
-        do i=1,L
-            do j=1,L
-                do k=1,L
-
-                    NJ2= sigma(sinal,i,j,k)*(  &
-                        sigma(sinal,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
-                        sigma(sinal,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
-                        sigma(sinal,i,j,suc(k))*Bond_k(sinal,i,j,k))
-
-
-                    soma_nj2=NJ2+ soma_nj2
-
-                end do
-            end do
-        end do
-
-                do sinal=-1,1,2
-                    do i=1,L
-                        do j=1,L
-                            do k=1,L
-                                somaSigma= somaSigma + sigma(sinal,i,j,k)
-                            end do
-                        end do
-                    end do
-                end do
-
+!
+!                do sinal=-1,1,2
+!                    do i=1,L
+!                        do j=1,L
+!                            do k=1,L
+!                                somaSigma= somaSigma + sigma(sinal,i,j,k)
+!                            end do
+!                        end do
+!                    end do
+!                end do
+!
 
         energia = -(soma_nj1+ J2*soma_nj2)
-        magnetizacao = somaSigma!sum(sigma(:,:,:,:))
+        magnetizacao = sum(sigma(:,:,:,:))
     end subroutine CalcularMagEng
     !-----------------------------------------------------------------
     subroutine metropolis
         integer i, j, k, sinal, NJ1, NJ2
-        sinal=1
+       ! varre subrede=1
         do i=1,L
             do j=1,L
                 do k=1,L
-                    NJ1= sigma(sinal,i,j,k)*(&
-                        sigma(-sinal,i,j,k)+ &
-                        sigma(-sinal,suc(i),j,k)+ &
-                        sigma(-sinal,suc(i),suc(j),k)+ &
-                        sigma(-sinal,i,suc(j),k)+ &
-                        sigma(-sinal,i,j,suc(k))+ &
-                        sigma(-sinal,suc(i),j,suc(k))+ &
-                        sigma(-sinal,suc(i),suc(j),suc(k))+ &
-                        sigma(-sinal,i,suc(j),suc(k))   )
+                    NJ1= sigma(1,i,j,k)*(&
+                         sigma(2,i,j,k)+ &
+                         sigma(2,suc(i),j,k)+ &
+                         sigma(2,suc(i),suc(j),k)+ &
+                         sigma(2,i,suc(j),k)+ &
+                         sigma(2,i,j,suc(k))+ &
+                         sigma(2,suc(i),j,suc(k))+ &
+                         sigma(2,suc(i),suc(j),suc(k))+ &
+                         sigma(2,i,suc(j),suc(k))   )
 
-                    NJ2= sigma(sinal,i,j,k)*(&
-                        sigma(sinal,ant(i),j,k)*Bond_i(sinal,ant(i),j,k)+ &
-                        sigma(sinal,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
-                        sigma(sinal,i,ant(j),k)*Bond_j(sinal,i,ant(j),k)+ &
-                        sigma(sinal,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
-                        sigma(sinal,i,j,ant(k))*Bond_k(sinal,i,j,ant(k))+ &
-                        sigma(sinal,i,j,suc(k))*Bond_k(sinal,i,j,k) )
+                    NJ2= sigma(1,i,j,k)*(&
+                        sigma(1,ant(i),j,k)*Bond_i(1,ant(i),j,k)+ &
+                        sigma(1,suc(i),j,k)*Bond_i(1,i,j,k)+ &
+                        sigma(1,i,ant(j),k)*Bond_j(1,i,ant(j),k)+ &
+                        sigma(1,i,suc(j),k)*Bond_j(1,i,j,k)+ &
+                        sigma(1,i,j,ant(k))*Bond_k(1,i,j,ant(k))+ &
+                        sigma(1,i,j,suc(k))*Bond_k(1,i,j,k) )
                     call random_number(rando)
                     if (rando<W(NJ1,NJ2)) then
-                        sigma(sinal,i,j,k)=-sigma(sinal,i,j,k)
+                        sigma(1,i,j,k)=-sigma(1,i,j,k)
                     end if
                 end do
             end do
         end do
 
-        sinal=-1
+      ! varre subrede=2
         do i=1,L
             do j=1,L
                 do k=1,L
-                    NJ1= sigma(sinal,i,j,k)*( &
-                        sigma(-sinal,ant(i),ant(j),k)+ &
-                        sigma(-sinal,i,ant(j),k)+ &
-                        sigma(-sinal,i,j,k)+ &
-                        sigma(-sinal,ant(i),j,k)+ &
-                        sigma(-sinal,ant(i),ant(j),ant(k))+ &
-                        sigma(-sinal,i,ant(j),ant(k))+ &
-                        sigma(-sinal,i,j,ant(k))+ &
-                        sigma(-sinal,ant(i),j,ant(k)) )
+                    NJ1= sigma(2,i,j,k)*( &
+                         sigma(1,ant(i),ant(j),k)+ &
+                         sigma(1,i,ant(j),k)+ &
+                         sigma(1,i,j,k)+ &
+                         sigma(1,ant(i),j,k)+ &
+                         sigma(1,ant(i),ant(j),ant(k))+ &
+                         sigma(1,i,ant(j),ant(k))+ &
+                         sigma(1,i,j,ant(k))+ &
+                         sigma(1,ant(i),j,ant(k)) )
 
-                    NJ2= sigma(sinal,i,j,k)*(  &
-                        sigma(sinal,ant(i),j,k)*Bond_i(sinal,ant(i),j,k)+ &
-                        sigma(sinal,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
-                        sigma(sinal,i,ant(j),k)*Bond_j(sinal,i,ant(j),k)+ &
-                        sigma(sinal,i,suc(j),k)*Bond_j(sinal,i,j,k)+ &
-                        sigma(sinal,i,j,ant(k))*Bond_k(sinal,i,j,ant(k))+ &
-                        sigma(sinal,i,j,suc(k))*Bond_k(sinal,i,j,k))
+                    NJ2= sigma(2,i,j,k)*(  &
+                        sigma(2,ant(i),j,k)*Bond_i(2,ant(i),j,k)+ &
+                        sigma(2,suc(i),j,k)*Bond_i(2,i,j,k)+ &
+                        sigma(2,i,ant(j),k)*Bond_j(2,i,ant(j),k)+ &
+                        sigma(2,i,suc(j),k)*Bond_j(2,i,j,k)+ &
+                        sigma(2,i,j,ant(k))*Bond_k(2,i,j,ant(k))+ &
+                        sigma(2,i,j,suc(k))*Bond_k(2,i,j,k))
                     call random_number(rando)
-                    if(rando<W(NJ1,NJ2)) sigma(sinal,i,j,k)=-sigma(sinal,i,j,k)
+                    if(rando<W(NJ1,NJ2)) sigma(2,i,j,k)=-sigma(2,i,j,k)
                 end do
             end do
         end do
