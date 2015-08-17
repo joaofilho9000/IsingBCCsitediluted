@@ -431,15 +431,6 @@ CONTAINS
         do i=1,L
             do j=1,L
                 do k=1,L
-!                    NJ1= sigma(sinal,i,j,k)*( &
-!                        sigma(-sinal,ant(i),ant(j),k)+ &
-!                        sigma(-sinal,i,ant(j),k)+ &
-!                        sigma(-sinal,i,j,k)+ &
-!                        sigma(-sinal,ant(i),j,k)+ &
-!                        sigma(-sinal,ant(i),ant(j),ant(k))+ &
-!                        sigma(-sinal,i,ant(j),ant(k))+ &
-!                        sigma(-sinal,i,j,ant(k))+ &
-!                        sigma(-sinal,ant(i),j,ant(k)) )
 
                     NJ2= sigma(sinal,i,j,k)*(  &
                         sigma(sinal,suc(i),j,k)*Bond_i(sinal,i,j,k)+ &
