@@ -11,13 +11,11 @@ program IsingBCC
     double precision energia
     double precision  somaMag, somaMag2, somaMag4
     double precision  somaEne, somaEne2, somaEne4
-
     double precision  mediaMag,  mediaMag2, mediaMag4
     double precision  mediaEne,mediaEne2, mediaEne4
     double precision  susceptibilidade, cumuM
     double precision  calor
-
-
+    real :: tempoInicial, tempoFinal, tempoCPU
     integer, dimension(:,:,:,:), allocatable ::sigma
     byte, dimension(:), allocatable ::ant, suc
     byte, dimension(:,:,:,:), allocatable ::bond_i,bond_j,bond_k
@@ -35,14 +33,15 @@ program IsingBCC
     open(12,file='dados.dat')
 
     !inicilizaÃ§Ã£o das variaveis
-    call leDados
+    !call leDados
+    call leargumentos
     allocate(ant(1:L))
     allocate(suc(1:L))
     allocate(bond_i(1:2,1:L,1:L,1:L))
     allocate(bond_j(1:2,1:L,1:L,1:L))
     allocate(bond_k(1:2,1:L,1:L,1:L))
     allocate(sigma(1:2,1:L,1:L,1:L))
-
+    call cpu_time(tempoInicial)
     write(*,*) 'iniciando simulação com :'
     write(*,*) 'p =', p
     write(*,*) 't0 =', t0
@@ -66,7 +65,7 @@ program IsingBCC
             write(*,*) 'ok'
             do passo = 1 , MCc
                 call metropolis
-                 call calcularMagEng
+                call calcularMagEng
                 write(22,*) , eneJ1, eneJ2,  magnetizacao
             end do
         else
@@ -75,6 +74,8 @@ program IsingBCC
                 call calcularMagEng
                 call calcularSoma
             end do
+            call cpu_time(tempoFinal)
+            TempoCPU=tempoFinal-tempoInicial
             call calcularMedia
         end if
     end do
@@ -134,7 +135,7 @@ CONTAINS
         calor= (MediaEne2-mediaEne*mediaEne)/NumeroSitios/t0/t0
         susceptibilidade= (mediaMag2 - MediaMag*MediaMag)*NumeroSitios/t0
         cumuM=1-mediaMag4/(3*mediaMag2*mediaMag2)  ! rever essa equaÃ§Ã£o soma ou media
-        write(*, *)t0, susceptibilidade, calor, cumuM, mediaMag, mediaEne
+        write(*, *)t0, susceptibilidade, calor, cumuM, mediaMag, mediaEne, TempoCPU
     end subroutine calcularMedia
      !-----------------------------------------------------------------------------
     subroutine leDados
@@ -148,7 +149,28 @@ CONTAINS
         read(12,*) MCc
         read(12,*) histograma
     end subroutine leDados
-
+    !-----------------------------------------------------------------------------
+    subroutine leargumentos
+        character(len=32) :: arg
+        call get_command_argument(1, arg)
+        read (arg,*) L
+        call get_command_argument(2, arg)
+        read(arg,*) p
+        call get_command_argument(3, arg)
+        read(arg,*) tin
+        call get_command_argument(4, arg)
+        read(arg,*) tfi
+        call get_command_argument(5, arg)
+        read(arg,*) dt
+        call get_command_argument(6, arg)
+        read(arg,*) j2
+        call get_command_argument(7, arg)
+        read(arg,*) MCx
+        call get_command_argument(8, arg)
+        read(arg,*) MCc
+        call get_command_argument(9, arg)
+        read(arg,*) histograma
+    end subroutine leargumentos
     !-----------------------------------------------------------------------------
     subroutine iniciaContorno
         byte :: i
@@ -265,11 +287,11 @@ CONTAINS
                 )==1) .AND. &
                 (sigma(1,i,j,k)==0).and. &
                 (sigma(1,ant(i),j,k)* &
-                  sigma(1,suc(i),j,k)* &
-                  sigma(1,i,ant(j),k)* &
-                  sigma(1,i,suc(j),k)* &
-                  sigma(1,i,j,ant(k))* &
-                  sigma(1,i,j,suc(k))==1)
+                sigma(1,suc(i),j,k)* &
+                sigma(1,i,ant(j),k)* &
+                sigma(1,i,suc(j),k)* &
+                sigma(1,i,j,ant(k))* &
+                sigma(1,i,j,suc(k))==1)
         else
             isolada= (ABS(&
                 sigma(1,ant(i),ant(j),k)* &
@@ -282,12 +304,12 @@ CONTAINS
                 sigma(1,ant(i),j,ant(k)) &
                 )==1) .AND. (sigma(2,i,j,k)==0).and. &
                 (sigma(2,ant(i),j,k)* &
-                  sigma(2,suc(i),j,k)* &
-                  sigma(2,i,ant(j),k)* &
-                  sigma(2,i,suc(j),k)* &
-                  sigma(2,i,j,ant(k))* &
-                  sigma(2,i,j,suc(k))==1)
-       end if
+                sigma(2,suc(i),j,k)* &
+                sigma(2,i,ant(j),k)* &
+                sigma(2,i,suc(j),k)* &
+                sigma(2,i,j,ant(k))* &
+                sigma(2,i,j,suc(k))==1)
+        end if
     end function  isolada
 
     !-----------------------------------------------------------------------------
@@ -323,7 +345,7 @@ CONTAINS
         do i=1,L
             do j=1,L
                 do k=1,L
-                   NJ1= sigma(1,i,j,k)*(&
+                    NJ1= sigma(1,i,j,k)*(&
                         sigma(2,i,j,k)+ &
                         sigma(2,suc(i),j,k)+ &
                         sigma(2,suc(i),suc(j),k)+ &
@@ -334,13 +356,13 @@ CONTAINS
                         sigma(2,i,suc(j),suc(k))   )
 
                     NJ2= sigma(1,i,j,k)*(&
-                         sigma(1,suc(i),j,k)*Bond_i(1,i,j,k)+ &
-                         sigma(1,i,suc(j),k)*Bond_j(1,i,j,k)+ &
-                         sigma(1,i,j,suc(k))*Bond_k(1,i,j,k) ) +&
-                         sigma(2,i,j,k)*( &
-                         sigma(2,suc(i),j,k)*Bond_i(2,i,j,k)+ &
-                         sigma(2,i,suc(j),k)*Bond_j(2,i,j,k)+ &
-                         sigma(2,i,j,suc(k))*Bond_k(2,i,j,k))
+                        sigma(1,suc(i),j,k)*Bond_i(1,i,j,k)+ &
+                        sigma(1,i,suc(j),k)*Bond_j(1,i,j,k)+ &
+                        sigma(1,i,j,suc(k))*Bond_k(1,i,j,k) ) +&
+                        sigma(2,i,j,k)*( &
+                        sigma(2,suc(i),j,k)*Bond_i(2,i,j,k)+ &
+                        sigma(2,i,suc(j),k)*Bond_j(2,i,j,k)+ &
+                        sigma(2,i,j,suc(k))*Bond_k(2,i,j,k))
 
                     soma_nj1=NJ1+ soma_nj1
                     soma_nj2=NJ2+ soma_nj2
@@ -355,27 +377,27 @@ CONTAINS
     !-----------------------------------------------------------------
     subroutine metropolis
         integer i, j, k, NJ1, NJ2
-       ! varre subrede=1
+        ! varre subrede=1
         do i=1,L
             do j=1,L
                 do k=1,L
                     NJ1= sigma(1,i,j,k)*(&
-                         sigma(2,i,j,k)+ &
-                         sigma(2,suc(i),j,k)+ &
-                         sigma(2,suc(i),suc(j),k)+ &
-                         sigma(2,i,suc(j),k)+ &
-                         sigma(2,i,j,suc(k))+ &
-                         sigma(2,suc(i),j,suc(k))+ &
-                         sigma(2,suc(i),suc(j),suc(k))+ &
-                         sigma(2,i,suc(j),suc(k))   )
+                        sigma(2,i,j,k)+ &
+                        sigma(2,suc(i),j,k)+ &
+                        sigma(2,suc(i),suc(j),k)+ &
+                        sigma(2,i,suc(j),k)+ &
+                        sigma(2,i,j,suc(k))+ &
+                        sigma(2,suc(i),j,suc(k))+ &
+                        sigma(2,suc(i),suc(j),suc(k))+ &
+                        sigma(2,i,suc(j),suc(k))   )
 
                     NJ2= sigma(1,i,j,k)*(&
-                         sigma(1,ant(i),j,k)*Bond_i(1,ant(i),j,k)+ &
-                         sigma(1,suc(i),j,k)*Bond_i(1,i,j,k)+ &
-                         sigma(1,i,ant(j),k)*Bond_j(1,i,ant(j),k)+ &
-                         sigma(1,i,suc(j),k)*Bond_j(1,i,j,k)+ &
-                         sigma(1,i,j,ant(k))*Bond_k(1,i,j,ant(k))+ &
-                         sigma(1,i,j,suc(k))*Bond_k(1,i,j,k) )
+                        sigma(1,ant(i),j,k)*Bond_i(1,ant(i),j,k)+ &
+                        sigma(1,suc(i),j,k)*Bond_i(1,i,j,k)+ &
+                        sigma(1,i,ant(j),k)*Bond_j(1,i,ant(j),k)+ &
+                        sigma(1,i,suc(j),k)*Bond_j(1,i,j,k)+ &
+                        sigma(1,i,j,ant(k))*Bond_k(1,i,j,ant(k))+ &
+                        sigma(1,i,j,suc(k))*Bond_k(1,i,j,k) )
                     call random_number(rando)
                     if (rando<W(NJ1,NJ2)) then
                         sigma(1,i,j,k)=-sigma(1,i,j,k)
@@ -384,27 +406,27 @@ CONTAINS
             end do
         end do
 
-      ! varre subrede=2
+        ! varre subrede=2
         do i=1,L
             do j=1,L
                 do k=1,L
                     NJ1= sigma(2,i,j,k)*( &
-                         sigma(1,ant(i),ant(j),k)+ &
-                         sigma(1,i,ant(j),k)+ &
-                         sigma(1,i,j,k)+ &
-                         sigma(1,ant(i),j,k)+ &
-                         sigma(1,ant(i),ant(j),ant(k))+ &
-                         sigma(1,i,ant(j),ant(k))+ &
-                         sigma(1,i,j,ant(k))+ &
-                         sigma(1,ant(i),j,ant(k)) )
+                        sigma(1,ant(i),ant(j),k)+ &
+                        sigma(1,i,ant(j),k)+ &
+                        sigma(1,i,j,k)+ &
+                        sigma(1,ant(i),j,k)+ &
+                        sigma(1,ant(i),ant(j),ant(k))+ &
+                        sigma(1,i,ant(j),ant(k))+ &
+                        sigma(1,i,j,ant(k))+ &
+                        sigma(1,ant(i),j,ant(k)) )
 
                     NJ2= sigma(2,i,j,k)*(  &
-                         sigma(2,ant(i),j,k)*Bond_i(2,ant(i),j,k)+ &
-                         sigma(2,suc(i),j,k)*Bond_i(2,i,j,k)+ &
-                         sigma(2,i,ant(j),k)*Bond_j(2,i,ant(j),k)+ &
-                         sigma(2,i,suc(j),k)*Bond_j(2,i,j,k)+ &
-                         sigma(2,i,j,ant(k))*Bond_k(2,i,j,ant(k))+ &
-                         sigma(2,i,j,suc(k))*Bond_k(2,i,j,k))
+                        sigma(2,ant(i),j,k)*Bond_i(2,ant(i),j,k)+ &
+                        sigma(2,suc(i),j,k)*Bond_i(2,i,j,k)+ &
+                        sigma(2,i,ant(j),k)*Bond_j(2,i,ant(j),k)+ &
+                        sigma(2,i,suc(j),k)*Bond_j(2,i,j,k)+ &
+                        sigma(2,i,j,ant(k))*Bond_k(2,i,j,ant(k))+ &
+                        sigma(2,i,j,suc(k))*Bond_k(2,i,j,k))
                     call random_number(rando)
                     if(rando<W(NJ1,NJ2)) sigma(2,i,j,k)=-sigma(2,i,j,k)
                 end do
