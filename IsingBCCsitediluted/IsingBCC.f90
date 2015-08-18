@@ -258,13 +258,18 @@ CONTAINS
                 sigma(2,suc(i),j,k)* &
                 sigma(2,suc(i),suc(j),k)* &
                 sigma(2,i,suc(j),k)* &
-
                 sigma(2,i,j,suc(k))* &
                 sigma(2,suc(i),j,suc(k))* &
                 sigma(2,suc(i),suc(j),suc(k))* &
                 sigma(2,i,suc(j),suc(k))&
                 )==1) .AND. &
-                (sigma(1,i,j,k)==0)
+                (sigma(1,i,j,k)==0).and. &
+                (sigma(1,ant(i),j,k)* &
+                  sigma(1,suc(i),j,k)* &
+                  sigma(1,i,ant(j),k)* &
+                  sigma(1,i,suc(j),k)* &
+                  sigma(1,i,j,ant(k))* &
+                  sigma(1,i,j,suc(k))==1)
         else
             isolada= (ABS(&
                 sigma(1,ant(i),ant(j),k)* &
@@ -275,7 +280,13 @@ CONTAINS
                 sigma(1,i,ant(j),ant(k))* &
                 sigma(1,i,j,ant(k))* &
                 sigma(1,ant(i),j,ant(k)) &
-                )==1) .AND. (sigma(2,i,j,k)==0)
+                )==1) .AND. (sigma(2,i,j,k)==0).and. &
+                (sigma(2,ant(i),j,k)* &
+                  sigma(2,suc(i),j,k)* &
+                  sigma(2,i,ant(j),k)* &
+                  sigma(2,i,suc(j),k)* &
+                  sigma(2,i,j,ant(k))* &
+                  sigma(2,i,j,suc(k))==1)
        end if
     end function  isolada
 
