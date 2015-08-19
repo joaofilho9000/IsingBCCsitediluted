@@ -23,7 +23,7 @@ program IsingBCC
     byte ::L
     real::t0, p   !p=0 sistema puro
     real::tin,tfi,dt
-    real::J2
+    real::J2,J1
     real::rando
     double precision ::w(-8:8,-6:6)
 
@@ -42,12 +42,17 @@ program IsingBCC
     allocate(bond_k(1:2,1:L,1:L,1:L))
     allocate(sigma(1:2,1:L,1:L,1:L))
     call cpu_time(tempoInicial)
-    write(*,*) 'iniciando simulação com :'
-    write(*,*) 'p =', p
-    write(*,*) 't0 =', t0
-    write(*,*) 'J2 =', J2
-    write(*,*) 'MCx =', MCx
-    write(*,*) 'MCc =', MCc
+    write(*,*) '#iniciando simulação com :'
+    write(*,*) '#L =', L
+    write(*,*) '#p =', p
+    write(*,*) '#Tin =', Tin
+    write(*,*) '#Tfi =', Tfi
+    write(*,*) '#dt =', dt
+    write(*,*) '#J1 =', J1
+    write(*,*) '#J2 =', J2
+    write(*,*) '#MCx =', MCx
+    write(*,*) '#MCc =', MCc
+    write(*,*) '#histograma =', histograma
     call initRandomSeed()
     call iniciaContorno
     call iniciaSigma
@@ -144,7 +149,9 @@ CONTAINS
         read(12,*) tin
         read(12,*) tfi
         read(12,*) dt
-        read(12,*) j2
+            read(12,*) J1
+        read(12,*) J2
+
         read(12,*) MCx
         read(12,*) MCc
         read(12,*) histograma
@@ -162,8 +169,10 @@ CONTAINS
         read(arg,*) tfi
         call get_command_argument(5, arg)
         read(arg,*) dt
+          call get_command_argument(6, arg)
+        read(arg,*) J1
         call get_command_argument(6, arg)
-        read(arg,*) j2
+        read(arg,*) J2
         call get_command_argument(7, arg)
         read(arg,*) MCx
         call get_command_argument(8, arg)
@@ -324,7 +333,7 @@ CONTAINS
 
         do i=-8,8
             do j=-6,6
-                aux=(i+j*J2)/t0
+                aux=(i*J1+j*J2)/t0
                 w(i,j)=1
                 if (aux >0) w(i,j)=exp(-2*aux)
             end do
@@ -369,7 +378,7 @@ CONTAINS
                 end do
             end do
         end do
-        energia = -(soma_nj1+ J2*soma_nj2)
+        energia = -(J1*soma_nj1+ J2*soma_nj2)
         eneJ1=soma_nj1
         eneJ2=soma_nj2
         magnetizacao = sum(sigma(:,:,:,:))
@@ -401,6 +410,7 @@ CONTAINS
                     call random_number(rando)
                     if (rando<W(NJ1,NJ2)) then
                         sigma(1,i,j,k)=-sigma(1,i,j,k)
+
                     end if
                 end do
             end do
