@@ -32,11 +32,11 @@ program IsingBCC
 
     !Abrindo arquivos
     open(22,file='hist.dat')
- !   open(12,file='dados.dat')
+    open(12,file='dados.dat')
 
     !inicilizaÃ§Ã£o das variaveis
-!    call leDados
-    call leargumentos
+    call leDados
+!    call leargumentos
     allocate(ant(1:L))
     allocate(suc(1:L))
     allocate(bond_i(1:2,1:L,1:L,1:L))
@@ -489,7 +489,7 @@ CONTAINS
 
     !-----------------------------------------------------------------------------
 
-    function isolada(subrede,i,j,k)
+    function isolada(subrede,i,j,k) ! verifica primeiros e segudos vizinhos
         !Variaveis mudas
         logical :: isolada
         byte::  i,j,k
@@ -533,6 +533,39 @@ CONTAINS
         end if
     end function  isolada
 
+    !-----------------------------------------------------------------------------
+!    function isolada(subrede,i,j,k) verifica apenas primeiros vizinhos
+!        !Variaveis mudas
+!        logical :: isolada
+!        byte::  i,j,k
+!        integer ::subrede
+!
+!        if(subrede==1)then
+!            isolada= (ABS(&
+!                sigma(2,i,j,k)* &
+!                sigma(2,suc(i),j,k)* &
+!                sigma(2,suc(i),suc(j),k)* &
+!                sigma(2,i,suc(j),k)* &
+!
+!                sigma(2,i,j,suc(k))* &
+!                sigma(2,suc(i),j,suc(k))* &
+!                sigma(2,suc(i),suc(j),suc(k))* &
+!                sigma(2,i,suc(j),suc(k))&
+!                )==1) .AND. &
+!                (sigma(1,i,j,k)==0)
+!        else
+!            isolada= (ABS(&
+!                sigma(1,ant(i),ant(j),k)* &
+!                sigma(1,i,ant(j),k)* &
+!                sigma(1,i,j,k)* &
+!                sigma(1,ant(i),j,k)* &
+!                sigma(1,ant(i),ant(j),ant(k))*&
+!                sigma(1,i,ant(j),ant(k))* &
+!                sigma(1,i,j,ant(k))* &
+!                sigma(1,ant(i),j,ant(k)) &
+!                )==1) .AND. (sigma(2,i,j,k)==0)
+!       end if
+!    end function  isolada
     !-----------------------------------------------------------------------------
 
     subroutine atualiza
@@ -593,7 +626,7 @@ CONTAINS
         energia = -(J1*soma_nj1+ J2*soma_nj2)
         eneJ1=soma_nj1
         eneJ2=soma_nj2
-        magnetizacao = sum(sigma(:,:,:,:))
+        magnetizacao = abs(sum(sigma(:,:,:,:)))
     end subroutine CalcularMagEng
     !-----------------------------------------------------------------
     subroutine metropolis
