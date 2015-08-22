@@ -25,16 +25,17 @@ program IsingBCC
     real::tin,tfi,dt
     real::J2,J1
     real::rando
+    integer::spin
     double precision ::w(-8:8,-6:6)
     double precision ::PJ1,PJ2
 
 
     !Abrindo arquivos
     open(22,file='hist.dat')
-    !open(12,file='dados.dat')
+ !   open(12,file='dados.dat')
 
     !inicilizaÃ§Ã£o das variaveis
-    !call leDados
+!    call leDados
     call leargumentos
     allocate(ant(1:L))
     allocate(suc(1:L))
@@ -66,17 +67,20 @@ program IsingBCC
         !repetiÃ§Ãµes termalizaÃ§Ã£o
         do passo = 1 , MCx
             call metropolis
+            call wolff
         end do
         if (histograma==1) then
             write(*,*) 'ok'
             do passo = 1 , MCc
                 call metropolis
+                call wolff
                 call calcularMagEng
                 write(22,*) , eneJ1, eneJ2,  magnetizacao
             end do
         else
             do passo = 1 , MCc
                 call metropolis
+                call wolff
                 call calcularMagEng
                 call calcularSoma
             end do
@@ -152,7 +156,6 @@ CONTAINS
         read(12,*) dt
         read(12,*) J1
         read(12,*) J2
-
         read(12,*) MCx
         read(12,*) MCc
         read(12,*) histograma
@@ -228,7 +231,6 @@ CONTAINS
 
     subroutine wolff
         byte :: i,j,k, subrede
-        integer :: spin
         !sorteia sitio semente
         do
             call random_number(rando)
@@ -243,78 +245,193 @@ CONTAINS
         end do
         spin= sigma(subrede, i,j,k)
         sigma(subrede, i,j,k)=-sigma(subrede, i,j,k)
-        call perimetro(subrede, i,j,k,spin)
+        call perimetro(subrede, i,j,k)
     end subroutine wolff
        !-----------------------------------------------------------------------------
-    recursive subroutine perimetro(subrede, i,j,k,spin)
+    recursive subroutine perimetro(subrede, i,j,k)
         byte, intent(in) :: i,j,k, subrede
-        integer, intent(in) ::  spin
-        if( subrede==1) then
-            !
-            if (sigma(2,suc(i),j,k)==spin)then
+        byte :: sub
+        if(subrede==1) then
+            sub=2
+            if (sigma(sub,i,j,k)==spin)then
                 call random_number(rando)
                 if (rando<PJ1) then
-                    sigma(2,suc(i),j,k)=-spin
-                    call perimetro(2,suc(i),j,k,spin)
+                    sigma(sub,i,j,k)=-spin
+                    call perimetro(sub,i,j,k)
                 end if
             end if
             !
-            if (sigma(2,suc(i),suc(j),k)==spin)then
+            if (sigma(sub,suc(i),j,k)==spin)then
                 call random_number(rando)
                 if (rando<PJ1) then
-                    sigma(2,suc(i),suc(j),k)=-spin
-                    call perimetro(2,suc(i),suc(j),k,spin)
+                    sigma(sub,suc(i),j,k)=-spin
+                    call perimetro(sub,suc(i),j,k)
                 end if
             end if
             !
-            if (sigma(2,i,suc(j),k)==spin)then
+            if (sigma(sub,suc(i),suc(j),k)==spin)then
                 call random_number(rando)
                 if (rando<PJ1) then
-                    sigma(2,i,suc(j),k)=-spin
-                    call perimetro(2,i,suc(j),k,spin)
+                    sigma(sub,suc(i),suc(j),k)=-spin
+                    call perimetro(sub,suc(i),suc(j),k)
                 end if
             end if
             !
-            if (sigma(2,i,j,suc(k))==spin)then
+            if (sigma(sub,i,suc(j),k)==spin)then
                 call random_number(rando)
                 if (rando<PJ1) then
-                    sigma(2,i,j,suc(k))=-spin
-                    call perimetro(2,i,j,suc(k),spin)
+                    sigma(sub,i,suc(j),k)=-spin
+                    call perimetro(sub,i,suc(j),k)
                 end if
             end if
             !
-            if (sigma(2,suc(i),j,suc(k))==spin)then
+            if (sigma(sub,i,j,suc(k))==spin)then
                 call random_number(rando)
                 if (rando<PJ1) then
-                    sigma(2,suc(i),j,suc(k))=-spin
-                    call perimetro(2,suc(i),j,suc(k),spin)
+                    sigma(sub,i,j,suc(k))=-spin
+                    call perimetro(sub,i,j,suc(k))
                 end if
             end if
             !
-            if (sigma(2,suc(i),suc(j),suc(k))==spin)then
+            if (sigma(sub,suc(i),j,suc(k))==spin)then
                 call random_number(rando)
                 if (rando<PJ1) then
-                    sigma(2,suc(i),suc(j),suc(k))=-spin
-                    call perimetro(2,suc(i),suc(j),suc(k),spin)
+                    sigma(sub,suc(i),j,suc(k))=-spin
+                    call perimetro(sub,suc(i),j,suc(k))
                 end if
             end if
             !
-            if (sigma(2,i,suc(j),suc(k))==spin)then
+            if (sigma(sub,suc(i),suc(j),suc(k))==spin)then
                 call random_number(rando)
                 if (rando<PJ1) then
-                    sigma(2,i,suc(j),suc(k))=-spin
-                    call perimetro(2,i,suc(j),suc(k),spin)
+                    sigma(sub,suc(i),suc(j),suc(k))=-spin
+                    call perimetro(sub,suc(i),suc(j),suc(k))
                 end if
             end if
             !
-            if (sigma(2,suc(i),j,k)==spin)then
+            if (sigma(sub,i,suc(j),suc(k))==spin)then
                 call random_number(rando)
                 if (rando<PJ1) then
-                    sigma(2,suc(i),j,k)=-spin
-                    call perimetro(subrede,2,suc(i),j,k)
+                    sigma(sub,i,suc(j),suc(k))=-spin
+                    call perimetro(sub,i,suc(j),suc(k))
+                end if
+            end if
+        else
+            !--------------------------------------------------------------------------
+            sub=1
+            if (sigma(sub,ant(i),ant(j),k)==spin)then
+                call random_number(rando)
+                if (rando<PJ1) then
+                    sigma(sub,ant(i),ant(j),k)=-spin
+                    call perimetro(sub,ant(i),ant(j),k)
+                end if
+            end if
+            !
+            if (sigma(sub,i,ant(j),k)==spin)then
+                call random_number(rando)
+                if (rando<PJ1) then
+                    sigma(sub,i,ant(j),k)=-spin
+                    call perimetro(sub,i,ant(j),k)
+                end if
+            end if
+            !
+            if (sigma(sub,i,j,k)==spin)then
+                call random_number(rando)
+                if (rando<PJ1) then
+                    sigma(sub,i,j,k)=-spin
+                    call perimetro(sub,i,j,k)
+                end if
+            end if
+            !
+            if (sigma(sub,ant(i),j,k)==spin)then
+                call random_number(rando)
+                if (rando<PJ1) then
+                    sigma(sub,ant(i),j,k)=-spin
+                    call perimetro(sub,ant(i),j,k)
+                end if
+            end if
+            !
+            if (sigma(sub,ant(i),ant(j),ant(k))==spin)then
+                call random_number(rando)
+                if (rando<PJ1) then
+                    sigma(sub,ant(i),ant(j),ant(k))=-spin
+                    call perimetro(sub,ant(i),ant(j),ant(k))
+                end if
+            end if
+            !
+            if (sigma(sub,i,ant(j),ant(k))==spin)then
+                call random_number(rando)
+                if (rando<PJ1) then
+                    sigma(sub,i,ant(j),ant(k))=-spin
+                    call perimetro(sub,i,ant(j),ant(k))
+                end if
+            end if
+            !
+            if (sigma(sub,i,j,ant(k))==spin)then
+                call random_number(rando)
+                if (rando<PJ1) then
+                    sigma(sub,i,j,ant(k))=-spin
+                    call perimetro(sub,i,j,ant(k))
+                end if
+            end if
+            !
+            if (sigma(sub,ant(i),j,ant(k)) ==spin)then
+                call random_number(rando)
+                if (rando<PJ1) then
+                    sigma(sub,ant(i),j,ant(k))=-spin
+                    call perimetro(sub,ant(i),j,ant(k))
                 end if
             end if
         end if
+        !--------------------------------------------------------------------------
+        sub=subrede;
+        if (sigma(sub,ant(i),j,k)*Bond_i(sub,ant(i),j,k)==spin)then
+            call random_number(rando)
+            if (rando<PJ2) then
+                sigma(sub,ant(i),j,k)=-spin
+                call perimetro(sub,ant(i),j,k)
+            end if
+        end if
+        !
+        if (sigma(sub,suc(i),j,k)*Bond_i(sub,i,j,k)==spin)then
+            call random_number(rando)
+            if (rando<PJ2) then
+                sigma(sub,suc(i),j,k)=-spin
+                call perimetro(sub,suc(i),j,k)
+            end if
+        end if
+        !
+        if (sigma(sub,i,ant(j),k)*Bond_j(sub,i,ant(j),k)==spin)then
+            call random_number(rando)
+            if (rando<PJ2) then
+                sigma(sub,i,ant(j),k)=-spin
+                call perimetro(sub,i,ant(j),k)
+            end if
+        end if
+        !
+        if (sigma(sub,i,suc(j),k)*Bond_j(sub,i,j,k)==spin)then
+            call random_number(rando)
+            if (rando<PJ2) then
+                sigma(sub,i,suc(j),k)=-spin
+                call perimetro(sub,i,suc(j),k)
+            end if
+        end if
+        !
+        if (sigma(sub,i,j,ant(k))*Bond_k(sub,i,j,ant(k))==spin)then
+            call random_number(rando)
+            if (rando<PJ2) then
+                sigma(sub,i,j,ant(k))=-spin
+                call perimetro(sub,i,j,ant(k))
+            end if
+        end if
+        if (sigma(sub,i,j,suc(k))*Bond_k(sub,i,j,k)==spin)then
+            call random_number(rando)
+            if (rando<PJ1) then
+                sigma(sub,i,j,suc(k))=-spin
+                call perimetro(sub,i,j,suc(k))
+            end if
+        end if
+        return
     end subroutine perimetro
 
     !-----------------------------------------------------------------------------
@@ -430,8 +547,8 @@ CONTAINS
                 if (aux >0) w(i,j)=exp(-2*aux)
             end do
         end do
-     !   PJ1= 1- exp(-2*J1/t0)
-      !  PJ2= 1- exp(-2*J2/t0)
+        PJ1= 1- exp(-2*J1/t0)
+        PJ2= 1- exp(-2*J2/t0)
 
     end subroutine atualiza
 
