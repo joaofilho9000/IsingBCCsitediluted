@@ -37,6 +37,7 @@ program IsingBCC
     !inicilizaÃ§Ã£o das variaveis
     call leDados
 !    call leargumentos
+    J1=1-p
     allocate(ant(1:L))
     allocate(suc(1:L))
     allocate(bond_i(1:2,1:L,1:L,1:L))
@@ -489,52 +490,7 @@ CONTAINS
 
     !-----------------------------------------------------------------------------
 
-    function isolada(subrede,i,j,k) ! verifica primeiros e segudos vizinhos
-        !Variaveis mudas
-        logical :: isolada
-        byte::  i,j,k
-        integer ::subrede
-
-        if(subrede==1)then
-            isolada= (ABS(&
-                sigma(2,i,j,k)* &
-                sigma(2,suc(i),j,k)* &
-                sigma(2,suc(i),suc(j),k)* &
-                sigma(2,i,suc(j),k)* &
-                sigma(2,i,j,suc(k))* &
-                sigma(2,suc(i),j,suc(k))* &
-                sigma(2,suc(i),suc(j),suc(k))* &
-                sigma(2,i,suc(j),suc(k))&
-                )==1) .AND. &
-                (sigma(1,i,j,k)==0).and. &
-                (sigma(1,ant(i),j,k)* &
-                sigma(1,suc(i),j,k)* &
-                sigma(1,i,ant(j),k)* &
-                sigma(1,i,suc(j),k)* &
-                sigma(1,i,j,ant(k))* &
-                sigma(1,i,j,suc(k))==1)
-        else
-            isolada= (ABS(&
-                sigma(1,ant(i),ant(j),k)* &
-                sigma(1,i,ant(j),k)* &
-                sigma(1,i,j,k)* &
-                sigma(1,ant(i),j,k)* &
-                sigma(1,ant(i),ant(j),ant(k))*&
-                sigma(1,i,ant(j),ant(k))* &
-                sigma(1,i,j,ant(k))* &
-                sigma(1,ant(i),j,ant(k)) &
-                )==1) .AND. (sigma(2,i,j,k)==0).and. &
-                (sigma(2,ant(i),j,k)* &
-                sigma(2,suc(i),j,k)* &
-                sigma(2,i,ant(j),k)* &
-                sigma(2,i,suc(j),k)* &
-                sigma(2,i,j,ant(k))* &
-                sigma(2,i,j,suc(k))==1)
-        end if
-    end function  isolada
-
-    !-----------------------------------------------------------------------------
-!    function isolada(subrede,i,j,k) verifica apenas primeiros vizinhos
+!    function isolada(subrede,i,j,k) ! verifica primeiros e segudos vizinhos
 !        !Variaveis mudas
 !        logical :: isolada
 !        byte::  i,j,k
@@ -546,13 +502,18 @@ CONTAINS
 !                sigma(2,suc(i),j,k)* &
 !                sigma(2,suc(i),suc(j),k)* &
 !                sigma(2,i,suc(j),k)* &
-!
 !                sigma(2,i,j,suc(k))* &
 !                sigma(2,suc(i),j,suc(k))* &
 !                sigma(2,suc(i),suc(j),suc(k))* &
 !                sigma(2,i,suc(j),suc(k))&
 !                )==1) .AND. &
-!                (sigma(1,i,j,k)==0)
+!                (sigma(1,i,j,k)==0).and. &
+!                (sigma(1,ant(i),j,k)* &
+!                sigma(1,suc(i),j,k)* &
+!                sigma(1,i,ant(j),k)* &
+!                sigma(1,i,suc(j),k)* &
+!                sigma(1,i,j,ant(k))* &
+!                sigma(1,i,j,suc(k))==1)
 !        else
 !            isolada= (ABS(&
 !                sigma(1,ant(i),ant(j),k)* &
@@ -563,9 +524,49 @@ CONTAINS
 !                sigma(1,i,ant(j),ant(k))* &
 !                sigma(1,i,j,ant(k))* &
 !                sigma(1,ant(i),j,ant(k)) &
-!                )==1) .AND. (sigma(2,i,j,k)==0)
-!       end if
+!                )==1) .AND. (sigma(2,i,j,k)==0).and. &
+!                (sigma(2,ant(i),j,k)* &
+!                sigma(2,suc(i),j,k)* &
+!                sigma(2,i,ant(j),k)* &
+!                sigma(2,i,suc(j),k)* &
+!                sigma(2,i,j,ant(k))* &
+!                sigma(2,i,j,suc(k))==1)
+!        end if
 !    end function  isolada
+
+    !-----------------------------------------------------------------------------
+    function isolada(subrede,i,j,k)! verifica apenas primeiros vizinhos
+        !Variaveis mudas
+        logical :: isolada
+        byte::  i,j,k
+        integer ::subrede
+
+        if(subrede==1)then
+            isolada= (ABS(&
+                sigma(2,i,j,k)* &
+                sigma(2,suc(i),j,k)* &
+                sigma(2,suc(i),suc(j),k)* &
+                sigma(2,i,suc(j),k)* &
+
+                sigma(2,i,j,suc(k))* &
+                sigma(2,suc(i),j,suc(k))* &
+                sigma(2,suc(i),suc(j),suc(k))* &
+                sigma(2,i,suc(j),suc(k))&
+                )==1) .AND. &
+                (sigma(1,i,j,k)==0)
+        else
+            isolada= (ABS(&
+                sigma(1,ant(i),ant(j),k)* &
+                sigma(1,i,ant(j),k)* &
+                sigma(1,i,j,k)* &
+                sigma(1,ant(i),j,k)* &
+                sigma(1,ant(i),ant(j),ant(k))*&
+                sigma(1,i,ant(j),ant(k))* &
+                sigma(1,i,j,ant(k))* &
+                sigma(1,ant(i),j,ant(k)) &
+                )==1) .AND. (sigma(2,i,j,k)==0)
+       end if
+    end function  isolada
     !-----------------------------------------------------------------------------
 
     subroutine atualiza
