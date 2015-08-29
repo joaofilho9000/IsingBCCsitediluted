@@ -46,16 +46,16 @@ program IsingBCC
     allocate(sigma(1:2,1:L,1:L,1:L))
     call cpu_time(tempoInicial)
     write(*,*) '#iniciando simulação com :'
-    write(*,*) '#L =', L
-    write(*,*) '#p =', p
-    write(*,*) '#Tin =', Tin
-    write(*,*) '#Tfi =', Tfi
-    write(*,*) '#dt =', dt
-    write(*,*) '#J1 =', J1
-    write(*,*) '#J2 =', J2
-    write(*,*) '#MCx =', MCx
-    write(*,*) '#MCc =', MCc
-    write(*,*) '#histograma =', histograma
+    write(*,*) '# L =', L
+    write(*,*) '# p =', p
+    write(*,*) '# Tin =', Tin
+    write(*,*) '# Tfi =', Tfi
+    write(*,*) '# dt =', dt
+    write(*,*) '# J1 =', J1
+    write(*,*) '# J2 =', J2
+    write(*,*) '# MCx =', MCx
+    write(*,*) '# MCc =', MCc
+    write(*,*) '# histograma =', histograma
     call initRandomSeed()
     call iniciaContorno
     call iniciaSigma
@@ -76,7 +76,7 @@ program IsingBCC
                 call metropolis
                 call wolff
                 call calcularMagEng
-                write(22,*) , eneJ1, eneJ2,  magnetizacao
+                write(22,*) eneJ1, eneJ2,  magnetizacao
             end do
         else
             do passo = 1 , MCc
@@ -99,7 +99,7 @@ program IsingBCC
     deallocate(bond_j)
     deallocate(bond_k)
     deallocate(sigma)
-    write(*,*) 'fim do programa'
+    write(*,*) '# fim do programa'
    !fim do programa
 
 CONTAINS
