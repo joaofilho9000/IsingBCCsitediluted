@@ -2,7 +2,7 @@ program IsingBCC
     implicit none
     save
 
-    !decalraÃ§Ã£o de variaveis
+    !decalrando variaveis
     intrinsic random_seed, random_number
 
     integer ::MCx, MCc
@@ -34,9 +34,9 @@ program IsingBCC
     open(22,file='hist.dat')
     open(12,file='dados.dat')
 
-    !inicilizaÃ§Ã£o das variaveis
-    call leDados
-!    call leargumentos
+    !inicilizando das variaveis
+!    call leDados
+    call leargumentos
     J1=1-p
     allocate(ant(1:L))
     allocate(suc(1:L))
@@ -45,17 +45,6 @@ program IsingBCC
     allocate(bond_k(1:2,1:L,1:L,1:L))
     allocate(sigma(1:2,1:L,1:L,1:L))
     call cpu_time(tempoInicial)
-    write(*,*) '#iniciando simulação com :'
-    write(*,*) '# L =', L
-    write(*,*) '# p =', p
-    write(*,*) '# Tin =', Tin
-    write(*,*) '# Tfi =', Tfi
-    write(*,*) '# dt =', dt
-    write(*,*) '# J1 =', J1
-    write(*,*) '# J2 =', J2
-    write(*,*) '# MCx =', MCx
-    write(*,*) '# MCc =', MCc
-    write(*,*) '# histograma =', histograma
     call initRandomSeed()
     call iniciaContorno
     call iniciaSigma
@@ -71,14 +60,24 @@ program IsingBCC
             call wolff
         end do
         if (histograma==1) then
-            write(*,*) 'ok'
-            do passo = 1 , MCc
+             do passo = 1 , MCc
                 call metropolis
                 call wolff
                 call calcularMagEng
-                write(22,*) eneJ1, eneJ2,  magnetizacao
+                write(*,*) eneJ1, eneJ2,  magnetizacao
             end do
         else
+             write(*,*) '#iniciando simulação com :'
+    write(*,*) '# L =', L
+    write(*,*) '# p =', p
+    write(*,*) '# Tin =', Tin
+    write(*,*) '# Tfi =', Tfi
+    write(*,*) '# dt =', dt
+    write(*,*) '# J1 =', J1
+    write(*,*) '# J2 =', J2
+    write(*,*) '# MCx =', MCx
+    write(*,*) '# MCc =', MCc
+    write(*,*) '# histograma =', histograma
             do passo = 1 , MCc
                 call metropolis
                 call wolff
@@ -99,7 +98,7 @@ program IsingBCC
     deallocate(bond_j)
     deallocate(bond_k)
     deallocate(sigma)
-    write(*,*) '# fim do programa'
+  !  write(*,*) '# fim do programa'
    !fim do programa
 
 CONTAINS
