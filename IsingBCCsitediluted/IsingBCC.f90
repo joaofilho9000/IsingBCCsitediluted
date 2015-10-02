@@ -21,8 +21,8 @@ program IsingBCC
     byte, dimension(:,:,:,:), allocatable ::bond_i,bond_j,bond_k
     byte :: histograma
     byte ::L
-    real::t0, p   !p=0 sistema puro
-    real::tin,tfi,dt
+    double precision::t0, p   !p=0 sistema puro
+    double precision::tin,tfi,dt
     real::J2,J1
     real::rando
     integer::spin
@@ -177,15 +177,25 @@ CONTAINS
         read(arg,*) a
         p=a;
         call get_command_argument(3, arg)
-        read(arg,*) tin
+        read(arg,*) a
+        !read(arg,*) tin
+        tin=a
         call get_command_argument(4, arg)
-        read(arg,*) tfi
+        !read(arg,*) tfi
+        read(arg,*) a
+        tfi=a
         call get_command_argument(5, arg)
-        read(arg,*) dt
+        !read(arg,*) dt
+        read(arg,*) a
+        dt=a
         call get_command_argument(6, arg)
-        read(arg,*) J1
+        !read(arg,*) J1
+        read(arg,*) a
+        J1=a
         call get_command_argument(7, arg)
-        read(arg,*) J2
+        read(arg,*) a
+        J2=a
+        !read(arg,*) J2
         call get_command_argument(8, arg)
         read(arg,*) MCx
         call get_command_argument(9, arg)
