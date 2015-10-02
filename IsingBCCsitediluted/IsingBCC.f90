@@ -52,6 +52,7 @@ program IsingBCC
     call dilui
     call geraLigacao
     if (histograma==1) then
+        t0 = tin
         call iniciaVariaveis
         call atualiza
         do passo = 1 , MCx
@@ -76,7 +77,8 @@ program IsingBCC
         write(*,*) '# MCx =', MCx
         write(*,*) '# MCc =', MCc
         write(*,*) '# histograma =', histograma
-        do t0 = tin , tfi, dt
+        t0 = tin
+        do while (t0<=tfi)
             call iniciaVariaveis
             call atualiza
             !repetiÃ§Ãµes termalizaÃ§Ã£o
@@ -93,6 +95,7 @@ program IsingBCC
             call cpu_time(tempoFinal)
             TempoCPU=tempoFinal-tempoInicial
             call calcularMedia
+        t0=t0+dt
         end do
     end if
     !fechando arquivos
