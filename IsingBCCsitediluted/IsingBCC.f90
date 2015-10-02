@@ -35,7 +35,7 @@ program IsingBCC
     open(12,file='dados.dat')
 
     !inicilizando das variaveis
-!    call leDados
+    !    call leDados
     call leargumentos
     J1=1-p
     allocate(ant(1:L))
@@ -51,33 +51,39 @@ program IsingBCC
     call iniciaBond
     call dilui
     call geraLigacao
-    do t0 = tin , tfi, dt
+    if (histograma==1) then
         call iniciaVariaveis
         call atualiza
-        !repetiÃ§Ãµes termalizaÃ§Ã£o
         do passo = 1 , MCx
             call metropolis
             call wolff
         end do
-        if (histograma==1) then
-             do passo = 1 , MCc
+        do passo = 1 , MCc
+            call metropolis
+            call wolff
+            call calcularMagEng
+            write(*,*) eneJ1, eneJ2,  magnetizacao
+        end do
+    else
+        write(*,*) '#iniciando simulação com :'
+        write(*,*) '# L =', L
+        write(*,*) '# p =', p
+        write(*,*) '# Tin =', Tin
+        write(*,*) '# Tfi =', Tfi
+        write(*,*) '# dt =', dt
+        write(*,*) '# J1 =', J1
+        write(*,*) '# J2 =', J2
+        write(*,*) '# MCx =', MCx
+        write(*,*) '# MCc =', MCc
+        write(*,*) '# histograma =', histograma
+        do t0 = tin , tfi, dt
+            call iniciaVariaveis
+            call atualiza
+            !repetiÃ§Ãµes termalizaÃ§Ã£o
+            do passo = 1 , MCx
                 call metropolis
                 call wolff
-                call calcularMagEng
-                write(*,*) eneJ1, eneJ2,  magnetizacao
             end do
-        else
-             write(*,*) '#iniciando simulação com :'
-    write(*,*) '# L =', L
-    write(*,*) '# p =', p
-    write(*,*) '# Tin =', Tin
-    write(*,*) '# Tfi =', Tfi
-    write(*,*) '# dt =', dt
-    write(*,*) '# J1 =', J1
-    write(*,*) '# J2 =', J2
-    write(*,*) '# MCx =', MCx
-    write(*,*) '# MCc =', MCc
-    write(*,*) '# histograma =', histograma
             do passo = 1 , MCc
                 call metropolis
                 call wolff
@@ -87,8 +93,8 @@ program IsingBCC
             call cpu_time(tempoFinal)
             TempoCPU=tempoFinal-tempoInicial
             call calcularMedia
-        end if
-    end do
+        end do
+    end if
     !fechando arquivos
     close(10)
     close(20)
@@ -163,10 +169,13 @@ CONTAINS
     !-----------------------------------------------------------------------------
     subroutine leargumentos
         character(len=32) :: arg
+        Integer, Parameter :: wp = Selected_real_kind( 12, 70 )
+        Real( wp ) :: a
         call get_command_argument(1, arg)
         read (arg,*) L
         call get_command_argument(2, arg)
-        read(arg,*) p
+        read(arg,*) a
+        p=a;
         call get_command_argument(3, arg)
         read(arg,*) tin
         call get_command_argument(4, arg)
@@ -489,49 +498,49 @@ CONTAINS
 
     !-----------------------------------------------------------------------------
 
-!    function isolada(subrede,i,j,k) ! verifica primeiros e segudos vizinhos
-!        !Variaveis mudas
-!        logical :: isolada
-!        byte::  i,j,k
-!        integer ::subrede
-!
-!        if(subrede==1)then
-!            isolada= (ABS(&
-!                sigma(2,i,j,k)* &
-!                sigma(2,suc(i),j,k)* &
-!                sigma(2,suc(i),suc(j),k)* &
-!                sigma(2,i,suc(j),k)* &
-!                sigma(2,i,j,suc(k))* &
-!                sigma(2,suc(i),j,suc(k))* &
-!                sigma(2,suc(i),suc(j),suc(k))* &
-!                sigma(2,i,suc(j),suc(k))&
-!                )==1) .AND. &
-!                (sigma(1,i,j,k)==0).and. &
-!                (sigma(1,ant(i),j,k)* &
-!                sigma(1,suc(i),j,k)* &
-!                sigma(1,i,ant(j),k)* &
-!                sigma(1,i,suc(j),k)* &
-!                sigma(1,i,j,ant(k))* &
-!                sigma(1,i,j,suc(k))==1)
-!        else
-!            isolada= (ABS(&
-!                sigma(1,ant(i),ant(j),k)* &
-!                sigma(1,i,ant(j),k)* &
-!                sigma(1,i,j,k)* &
-!                sigma(1,ant(i),j,k)* &
-!                sigma(1,ant(i),ant(j),ant(k))*&
-!                sigma(1,i,ant(j),ant(k))* &
-!                sigma(1,i,j,ant(k))* &
-!                sigma(1,ant(i),j,ant(k)) &
-!                )==1) .AND. (sigma(2,i,j,k)==0).and. &
-!                (sigma(2,ant(i),j,k)* &
-!                sigma(2,suc(i),j,k)* &
-!                sigma(2,i,ant(j),k)* &
-!                sigma(2,i,suc(j),k)* &
-!                sigma(2,i,j,ant(k))* &
-!                sigma(2,i,j,suc(k))==1)
-!        end if
-!    end function  isolada
+    !    function isolada(subrede,i,j,k) ! verifica primeiros e segudos vizinhos
+    !        !Variaveis mudas
+    !        logical :: isolada
+    !        byte::  i,j,k
+    !        integer ::subrede
+    !
+    !        if(subrede==1)then
+    !            isolada= (ABS(&
+    !                sigma(2,i,j,k)* &
+    !                sigma(2,suc(i),j,k)* &
+    !                sigma(2,suc(i),suc(j),k)* &
+    !                sigma(2,i,suc(j),k)* &
+    !                sigma(2,i,j,suc(k))* &
+    !                sigma(2,suc(i),j,suc(k))* &
+    !                sigma(2,suc(i),suc(j),suc(k))* &
+    !                sigma(2,i,suc(j),suc(k))&
+    !                )==1) .AND. &
+    !                (sigma(1,i,j,k)==0).and. &
+    !                (sigma(1,ant(i),j,k)* &
+    !                sigma(1,suc(i),j,k)* &
+    !                sigma(1,i,ant(j),k)* &
+    !                sigma(1,i,suc(j),k)* &
+    !                sigma(1,i,j,ant(k))* &
+    !                sigma(1,i,j,suc(k))==1)
+    !        else
+    !            isolada= (ABS(&
+    !                sigma(1,ant(i),ant(j),k)* &
+    !                sigma(1,i,ant(j),k)* &
+    !                sigma(1,i,j,k)* &
+    !                sigma(1,ant(i),j,k)* &
+    !                sigma(1,ant(i),ant(j),ant(k))*&
+    !                sigma(1,i,ant(j),ant(k))* &
+    !                sigma(1,i,j,ant(k))* &
+    !                sigma(1,ant(i),j,ant(k)) &
+    !                )==1) .AND. (sigma(2,i,j,k)==0).and. &
+    !                (sigma(2,ant(i),j,k)* &
+    !                sigma(2,suc(i),j,k)* &
+    !                sigma(2,i,ant(j),k)* &
+    !                sigma(2,i,suc(j),k)* &
+    !                sigma(2,i,j,ant(k))* &
+    !                sigma(2,i,j,suc(k))==1)
+    !        end if
+    !    end function  isolada
 
     !-----------------------------------------------------------------------------
     function isolada(subrede,i,j,k)! verifica apenas primeiros vizinhos
@@ -564,7 +573,7 @@ CONTAINS
                 sigma(1,i,j,ant(k))* &
                 sigma(1,ant(i),j,ant(k)) &
                 )==1) .AND. (sigma(2,i,j,k)==0)
-       end if
+        end if
     end function  isolada
     !-----------------------------------------------------------------------------
 
