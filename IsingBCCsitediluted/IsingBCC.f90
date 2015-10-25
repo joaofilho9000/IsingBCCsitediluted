@@ -26,6 +26,7 @@ program IsingBCC
     real::J2,J1
     real::rando
     integer::spin
+    integer::amostras
     double precision ::w(-8:8,-6:6)
     double precision ::PJ1,PJ2
 
@@ -53,8 +54,13 @@ program IsingBCC
     call geraLigacao
     if (histograma==1) then
         t0 = tin
-        call iniciaVariaveis
         call atualiza
+        do amostras = 1 , 50
+        call iniciaSigma
+        call iniciaBond
+        call dilui
+        call geraLigacao
+        call iniciaVariaveis
         do passo = 1 , MCx
             call metropolis
             call wolff
@@ -64,6 +70,7 @@ program IsingBCC
             call wolff
             call calcularMagEng
             write(*,*) eneJ1, eneJ2,  magnetizacao
+        end do
         end do
     else
         write(*,*) '#iniciando simulação com :'
@@ -77,6 +84,10 @@ program IsingBCC
         write(*,*) '# MCx =', MCx
         write(*,*) '# MCc =', MCc
         write(*,*) '# histograma =', histograma
+        call iniciaSigma
+        call iniciaBond
+        call dilui
+        call geraLigacao
         t0 = tin
         do while (t0<=tfi)
             call iniciaVariaveis
@@ -95,7 +106,7 @@ program IsingBCC
             call cpu_time(tempoFinal)
             TempoCPU=tempoFinal-tempoInicial
             call calcularMedia
-        t0=t0+dt
+            t0=t0+dt
         end do
     end if
     !fechando arquivos
@@ -154,7 +165,7 @@ CONTAINS
         calor= (MediaEne2-mediaEne*mediaEne)/NumeroSitios/t0/t0
         susceptibilidade= (mediaMag2 - MediaMag*MediaMag)*NumeroSitios/t0
         cumuM=1-mediaMag4/(3*mediaMag2*mediaMag2)  ! rever essa equaÃ§Ã£o soma ou media
-        write(*, *)t0, susceptibilidade, calor, cumuM, mediaMag, mediaEne, TempoCPU
+        write(*,*)t0, susceptibilidade, calor, cumuM, mediaMag, mediaEne, TempoCPU
     end subroutine calcularMedia
      !-----------------------------------------------------------------------------
     subroutine leDados
