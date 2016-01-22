@@ -1,7 +1,7 @@
 program IsingBCC
     implicit none
     save
-
+!teste
     !decalrando variaveis
     intrinsic random_seed, random_number
 
